@@ -85,7 +85,7 @@ qzone_getAlbumDesc.py
 ```text
 qzone_v6_backup.json
 ```
-
+相册描述则将按相册分类各自保存为独立的 相册名.json 文件 
 ---
 
 ### 备份相册描述
@@ -209,6 +209,7 @@ Output:
 ```text
 qzone_v6_backup.json
 ```
+Album descriptions are exported as individual JSON files grouped by album.
 
 ---
 
