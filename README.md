@@ -85,10 +85,10 @@ qzone_getAlbumDesc.py
 ```text
 qzone_v6_backup.json
 相册描述则将按相册分类各自保存为独立的 相册名.json 文件 
+```
 
----
 
-### 备份相册描述
+## 备份相册描述
 
 运行：
 
