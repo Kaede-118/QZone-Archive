@@ -51,7 +51,7 @@ python qzone_getPost.py
 * 导出 JSON
 
 
-##爬取结果示例
+## 爬取结果示例
 qzone_getPost.py
 爬取转发原文、转评、评论区、时间戳
 
@@ -174,7 +174,7 @@ The script will:
 * Export all data as JSON
 
 
-##Example Output
+## Example Output
 
 qzone_getPost.py
 Reposted original text, repost comments, comment section, and timestamps
