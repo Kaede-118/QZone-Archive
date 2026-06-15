@@ -2,6 +2,7 @@
 
 在 QQ 空间彻底成为时代眼泪之前，把属于自己的互联网记忆保存下来。
 
+ 作者已成功备份了2011年以来的超过一万条说说和相册描述
 ## 功能
 
 * 备份 QQ 空间说说
@@ -21,6 +22,7 @@
 pip install playwright
 playwright install
 ```
+
 
 ## 使用方法
 
@@ -48,6 +50,36 @@ python qzone_getPost.py
 * 保存断点
 * 导出 JSON
 
+
+##爬取结果示例
+qzone_getPost.py
+爬取转发原文、转评、评论区、时间戳
+
+  {
+    "time": "2021-07-08 21:34:50",
+    "timestamp": 1625751290,
+    "name": "Kaede",
+    "content": "[转评] 我现在所在的陆行鸟大区红玉海服务器已经解除角色创建限制，列表有没有人来一起玩[em]e400932[/em] [转自] 可恶，为什么列表没人来玩ff14 来打副本，钓鱼，弹琴(听别人也行），逛rp店（role play角色扮演，中/重rp语擦，轻rp类似女仆咖啡厅） 当暖暖玩也好玩啊（） 还能结婚.jpg 总之来玩，哦摩西罗伊 [图片]",
+    "comments": [
+      "AsahiPrPr：明天",
+      "Kaede → AsahiPrPr：差不多"
+    ]
+  }
+
+qzone_getAlbumDesc.py
+爬取相册描述
+
+  "2026-05-26": {
+    "18:53": "我还以为是个垃圾袋，差点踩上去，怎么是只猫"
+  },
+  "2026-05-25": {
+    "21:48": "咖啡因",
+    "16:48": "阿紫一。。。",
+    "16:10": "舍友说晚上我的键盘吵，那换个新的\n闷了很多不扰民了\n旧的拿回家给老电脑用"
+  }
+
+
+  
 输出文件：
 
 ```text
@@ -88,11 +120,14 @@ qzone_data/
 * Cookie 仅保存在本地，不会上传到任何服务器。
 * 请勿用于未经授权的数据抓取。
 
+
 ---
 
 # English
 
 Archive your QQ Zone memories before they disappear forever.
+
+Successfully archived over 10,000 posts from a QQ Zone account dating back to 2011.
 
 ## Features
 
@@ -138,6 +173,37 @@ The script will:
 * Resume from checkpoints
 * Export all data as JSON
 
+
+##Example Output
+
+qzone_getPost.py
+Reposted original text, repost comments, comment section, and timestamps
+
+  {
+    "time": "2021-07-08 21:34:50",
+    "timestamp": 1625751290,
+    "name": "Kaede",
+    "content": "[转评] 我现在所在的陆行鸟大区红玉海服务器已经解除角色创建限制，列表有没有人来一起玩[em]e400932[/em] [转自] 可恶，为什么列表没人来玩ff14 来打副本，钓鱼，弹琴(听别人也行），逛rp店（role play角色扮演，中/重rp语擦，轻rp类似女仆咖啡厅） 当暖暖玩也好玩啊（） 还能结婚.jpg 总之来玩，哦摩西罗伊 [图片]",
+    "comments": [
+      "AsahiPrPr：明天傻屌",
+      "Kaede → AsahiPrPr：差不多"
+    ]
+  }
+
+qzone_getAlbumDesc.py
+Album descriptions
+
+
+  "2026-05-26": {
+    "18:53": "我还以为是个垃圾袋，差点踩上去，怎么是只猫"
+  },
+  "2026-05-25": {
+    "21:48": "咖啡因",
+    "16:48": "阿紫一。。。",
+    "16:10": "舍友说晚上我的键盘吵，那换个新的\n闷了很多不扰民了\n旧的拿回家给老电脑用"
+  }
+
+  
 Output:
 
 ```text
