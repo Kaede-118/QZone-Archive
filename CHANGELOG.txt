@@ -1,0 +1,22 @@
+# Changelog
+
+## V2 — 2026-06-24
+
+长说说截断补全 + 原始数据存档。
+
+### 新增
+
+- `get_msgdetail()` — 通过 `emotion_cgi_msgdetail_v6` 接口获取完整正文
+- `save_raw_data()` — 原始 API 响应写到 `qzone_v2_raw.json`
+- 去重键从 `timestamp` 改为 `tid`，更精确
+- 每页保存原始 msglist item + detail 响应到 raw 文件
+
+### 修改
+
+- 遍历 msglist 时检查 `has_more_con`，为 1 时自动调 detail 接口补全文
+- clean 输出结构新增字段：`tid`、`has_more_con`、`detail_fetched`
+- 断点恢复时同时加载 raw 数据
+
+### 未改动
+
+- 真人行为模拟、限流指数退避、评论解析、图片/视频标记逻辑保持原样
