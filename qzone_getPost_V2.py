@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import random
 import re
@@ -10,13 +11,15 @@ empty_count=0
 # 配置
 # ============================================
 
-QQ = ""
-#Fill your QQ number here
+QQ = "2198047522"
+
 COOKIE_FILE = "qzone_login.json"
 
-OUTPUT_FILE = "qzone_v6_backup.json"
+OUTPUT_FILE = "qzone_v2_clean.json"
 
 CHECKPOINT_FILE = "checkpoint.json"
+
+RAW_OUTPUT_FILE = "qzone_v2_raw.json"
 
 # ============================================
 # GTK
@@ -97,6 +100,101 @@ def save_checkpoint(pos, last_ts):
             ensure_ascii=False,
             indent=2
         )
+
+
+def save_raw_data(raw_data):
+
+    with open(
+        RAW_OUTPUT_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            raw_data,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+
+# ============================================
+# 获取详情 (V2)
+# ============================================
+
+def get_msgdetail(page, tid, uin, g_tk):
+
+    url = (
+        "https://user.qzone.qq.com/proxy/domain/"
+        "taotao.qq.com/cgi-bin/"
+        "emotion_cgi_msgdetail_v6"
+    )
+
+    params = {
+        "tid": tid,
+        "uin": uin,
+        "hostuin": uin,
+        "t1_source": 1,
+        "not_trunc_con": 1,
+        "code_version": 1,
+        "format": "fs",
+        "g_tk": g_tk,
+    }
+
+    result = page.evaluate(
+        """
+        async ({url, params}) => {
+
+            const qs = new URLSearchParams(
+                params
+            ).toString()
+
+            const resp = await fetch(
+                `${url}?${qs}`,
+                {
+                    credentials: "include"
+                }
+            )
+
+            return await resp.text()
+        }
+        """,
+        {
+            "url": url,
+            "params": params
+        }
+    )
+
+    result = result.strip()
+
+    # 去掉 wrapper
+    if "frameElement" in result:
+
+        start = result.find("(")
+
+        end = result.rfind(")")
+
+        if start != -1 and end != -1:
+
+            result = result[
+                start + 1:
+                end
+            ]
+
+    elif result.startswith("_preloadCallback"):
+
+        start = result.find("(")
+
+        end = result.rfind(")")
+
+        if start != -1 and end != -1:
+
+            result = result[
+                start + 1:
+                end
+            ]
+
+    return json.loads(result)
 
 
 # ============================================
@@ -243,7 +341,15 @@ with sync_playwright() as p:
         cookie_dict[
             c["name"]
         ] = c["value"]
+    print(
+        "p_skey =",
+        repr(cookie_dict.get("p_skey"))
+    )
 
+    print(
+        "skey =",
+        repr(cookie_dict.get("skey"))
+    )
     GTK = getGTK(
         cookie_dict["p_skey"]
     )
@@ -287,7 +393,7 @@ with sync_playwright() as p:
                 for item in all_data:
 
                     seen.add(
-                        item["timestamp"]
+                        item["tid"]
                     )
 
                 print(
@@ -327,13 +433,39 @@ with sync_playwright() as p:
         )
 
     # ========================================
+    # 加载 raw 数据
+    # ========================================
+
+    raw_data = []
+
+    if Path(RAW_OUTPUT_FILE).exists():
+
+        with open(
+            RAW_OUTPUT_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            try:
+
+                raw_data = json.load(f)
+
+                print(
+                    f"已加载 {len(raw_data)} 条原始数据"
+                )
+
+            except:
+
+                raw_data = []
+
+    # ========================================
     # 开始抓取
     # ========================================
 
     while True:
 
         print(
-            f"\n========== pos={pos} =========="
+            f"\n========== pos={pos} | {datetime.now()} ========="
         )
 
         url = (
@@ -529,14 +661,65 @@ with sync_playwright() as p:
                 0
             )
 
+            tid = item.get(
+                "tid",
+                ""
+            )
+
             # 已存在
-            if ts in seen:
+            if tid in seen:
 
                 continue
 
-            seen.add(ts)
+            seen.add(tid)
 
             last_ts = ts
+
+            # =================================
+            # V2: 补全文
+            # =================================
+
+            tid = item.get(
+                "tid",
+                ""
+            )
+
+            has_more_con = item.get(
+                "has_more_con",
+                0
+            )
+
+            detail_data = None
+
+            if has_more_con == 1:
+
+                try:
+
+                    detail_data = get_msgdetail(
+                        page,
+                        tid,
+                        QQ,
+                        GTK
+                    )
+
+                    full_content = detail_data.get(
+                        "content",
+                        ""
+                    )
+
+                    if full_content:
+
+                        item["content"] = full_content
+
+                    print(
+                        f"\n补全文成功 tid={tid}"
+                    )
+
+                except Exception as e:
+
+                    print(
+                        f"\n获取详情失败 tid={tid}: {e}"
+                    )
 
             # =================================
             # 正文
@@ -715,12 +898,13 @@ with sync_playwright() as p:
             )
 
             # =================================
-            # 保存结构
+            # 保存结构 (V2)
             # =================================
 
             feed = {
                 "time": dt,
                 "timestamp": ts,
+                "tid": tid,
                 "name": item.get(
                     "nickname"
                 ) or item.get(
@@ -728,10 +912,27 @@ with sync_playwright() as p:
                     ""
                 ),
                 "content": content,
-                "comments": comments
+                "comments": comments,
+                "has_more_con": has_more_con,
+                "detail_fetched": detail_data is not None
             }
 
             all_data.append(feed)
+
+            # =================================
+            # 原始数据 (V2)
+            # =================================
+
+            raw_entry = {
+                "tid": tid,
+                "msglist": item,
+            }
+
+            if detail_data is not None:
+
+                raw_entry["detail"] = detail_data
+
+            raw_data.append(raw_entry)
 
             new_count += 1
 
@@ -745,6 +946,8 @@ with sync_playwright() as p:
         # ====================================
 
         save_data(all_data)
+
+        save_raw_data(raw_data)
 
         save_checkpoint(
             pos,
